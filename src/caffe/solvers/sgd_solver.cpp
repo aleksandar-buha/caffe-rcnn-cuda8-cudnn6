@@ -30,12 +30,16 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
   } else if (lr_policy == "step") {
+    CHECK_GT(this->param_.stepsize(), 0);
     this->current_step_ = this->iter_ / this->param_.stepsize();
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "exp") {
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
   } else if (lr_policy == "inv") {
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() *
         pow(Dtype(1) + this->param_.gamma() * this->iter_,
             - this->param_.power());
@@ -46,6 +50,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
       LOG(INFO) << "MultiStep Status: Iteration " <<
       this->iter_ << ", step = " << this->current_step_;
     }
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "poly") {
@@ -53,6 +58,8 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
         (Dtype(this->iter_) / Dtype(this->param_.max_iter())),
         this->param_.power());
   } else if (lr_policy == "sigmoid") {
+    CHECK_GE(this->param_.gamma(), 0);
+    CHECK_GT(this->param_.stepsize(), 0);
     rate = this->param_.base_lr() * (Dtype(1.) /
         (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(this->iter_) -
           Dtype(this->param_.stepsize())))));
@@ -100,10 +107,10 @@ void SGDSolver<Dtype>::ClipGradients() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
-  CHECK(Caffe::root_solver());
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << this->iter_
+        << ", lr = " << rate;
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->learnable_params().size();

@@ -47,13 +47,16 @@
 # PyCharm files
 .idea
 
+# Visual Studio Code files
+.vscode
+
 # OSX dir files
 .DS_Store
 
 ## Caffe
 
 # User's build configuration
-Makefile.config
+# Makefile.config
 
 # Data and models are either
 # 1. reference, and not casually committed
@@ -81,6 +84,7 @@ cmake_build
 
 # Generated documentation
 docs/_site
+docs/_includes
 docs/gathered
 _site
 doxygen
